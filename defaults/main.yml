@@ -1,0 +1,10 @@
+---
+nc_sqlbackup: ""
+nc_location: "nextcloud"
+nc_data: "ncdata"
+nc_db_name: "nextcloud"
+nc_db_user: "cloud_user"
+nc_db_pw: ""
+nc_redis_socket: ""
+nc_php_fpm_pool: "cloud"
+#drupal_trusted_host_pattern: "^www\.example\.com$"
