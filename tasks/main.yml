@@ -1,0 +1,41 @@
+- name: Enable server:php repository
+  community.general.zypper_repository:
+    name: server:php:applications
+    repo: 'https://download.opensuse.org/repositories/server:/php:/applications/15.4/'
+    state: present
+    runrefresh: true
+    auto_import_keys: yes
+
+- name: Refresh repos and update packages
+  community.general.zypper:
+    name: '*'
+    state: latest
+    update_cache: yes
+
+- name: Install nextcloud + useful php8 packages
+  ansible.builtin.package:
+    name:
+      - nextcloud
+      - php8-ctype
+      - php8-curl
+      - php8-dom
+      - php8-fileinfo
+      - php8-gd
+      - php8-mbstring
+      - php8-openssl
+      - php8-posix
+      - php8-xmlreader
+      - php8-xmlwriter
+      - php8-zip
+      - php8-zlib
+      - php8-pdo
+      - php8-mysql
+      - php8-intl
+      - php8-bz2
+      - php8-ldap
+      - php8-exif
+      - php8-fastcgi
+      - php8-pcntl
+      - php8-phar
+    state: present
+
