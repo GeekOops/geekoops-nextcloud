@@ -18,10 +18,13 @@ You can set the following variables to configure the role. Here listed are the v
 | Value | Description | Default |
 |-------|-------------|---------|
 |`sqlbackup` | file with an sql backup | "" |
-|`drupal_location` | install location of drupal in /srv/www | "drupal9-hp" |
-|`drupal_db_name` | Who gets update notifications | "" |
-|`drupal_db_user` | Who gets update notifications | "" |
-|`drupal_dp_pw` | Who gets update notifications | "" |
+|`nc_location` | install location of nextcloud in /srv/www | "nextcloud" |
+|`nc_data` | data location outside of /srv/www | "ncdata" |
+|`nc_db_name` | name of database to utilize | "nextcloud" |
+|`nc_db_user` | mysql username | "" |
+|`nc_db_pw` | password of mysql user | "" |
+|`nc_redis_socket` | redis unix socket to utilize | "" |
+|`nc_php_fpm_pool` | name of the PHP-fpm pool to utilize | "" |
 |`drupal_trusted_host_pattern` | Who gets update notifications | "" |
 
 ## Example Playbook
@@ -30,7 +33,7 @@ Including an example of how to use your role (for instance, with variables passe
 
     - hosts: jellyfish
       roles:
-         - { role: geekoops-nextcloud, letsencrypt_domains: "www.example.org", letsencrypt_mail_address: "webmaster@example.org" }
+         - { role: geekoops-nextcloud, nc_db_pw: "1234bcd" }
 
 An advanced example for the imaginary `jellyfish` test server
 
@@ -38,11 +41,8 @@ An advanced example for the imaginary `jellyfish` test server
       roles:
          - role: geekoops-nextcloud
            vars:
-             letsencrypt_mail_address: "webmaster@example.org"
-             letsencrypt_domains:
-               - "www.example.org"
-               - "smtp.example.org"
-               - "imap.example.org"
+             nc_db_pw: "1234abcd"
+             nc_php_fpm_pool: "cloud"
 
 ## Stuff to do afterwards
 - If you replayed a backup, you need to copy over plugins, data
