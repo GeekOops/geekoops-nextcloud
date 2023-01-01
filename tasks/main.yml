@@ -6,16 +6,26 @@
     runrefresh: true
     auto_import_keys: yes
 
+# We need a separate repo to get php8-pear... the priority is chosen lower than the default, so we don't interfere with the installation
+- name: Enable languages:php8.0 repository for php8-pear
+  community.general.zypper_repository:
+    name: devel:languages:php:php80
+    repo: 'https://download.opensuse.org/repositories/devel:/languages:/php:/php80/openSUSE_Leap_15.4/'
+    state: present
+    runrefresh: true
+    priority: 100
+    auto_import_keys: yes
+
 - name: Refresh repos and update packages
   community.general.zypper:
     name: '*'
     state: latest
     update_cache: yes
 
-- name: Install nextcloud + useful php8 packages
+- name: Install nextcloud(server:php:applications should have a recent one) + useful php8 packages
   ansible.builtin.package:
     name:
-      - nextcloud
+      - php8-pear
       - php8-ctype
       - php8-curl
       - php8-dom
@@ -37,5 +47,33 @@
       - php8-fastcgi
       - php8-pcntl
       - php8-phar
+      - php8-ftp
+      - nextcloud
     state: present
 
+#- name: create nextcloud mysql database
+#  community.mysql.mysql_db:
+#    name: "{{ nc_db_name }}"
+#    state: present
+
+#- name: create nextcloud database use
+#  community.mysql.mysql_user:
+#    name: "{{ nc_db_user }}"
+#    password: "{{ nc_db_pw }}"
+#    state: present
+#    priv:
+#      '{{ nc_db_name }}.*:ALL,GRANT'
+
+# Copy database dump file to remote host and restore it to database 'my_db'
+#- name: Copy database dump file
+#  ansible.builtin.copy:
+#    src: "{{ sqlbackup }}"
+#    dest: /tmp
+#  when: sqlbackup| length > 0
+
+#- name: optionally play back an SQL backup
+#  community.mysql.mysql_db:
+#    name: "{{ nc_db_name }}"
+#    state: import
+#    target: "/tmp/{{ sqlbackup }}"
+#  when: sqlbackup| length > 0
