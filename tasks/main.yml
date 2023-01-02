@@ -16,6 +16,16 @@
     priority: 100
     auto_import_keys: yes
 
+# We need a separate repo to get php8-apcu + php8-redis... the priority is chosen lower than the default, so we don't interfere with the installation
+- name: Enable server:php:extensions repository for php8-apcu + php8-redis
+  community.general.zypper_repository:
+    name: server:php:extensions
+    repo: 'https://download.opensuse.org/repositories/server:/php:/extensions/15.4/'
+    state: present
+    runrefresh: true
+    priority: 100
+    auto_import_keys: yes
+
 - name: Refresh repos and update packages
   community.general.zypper:
     name: '*'
@@ -48,32 +58,95 @@
       - php8-pcntl
       - php8-phar
       - php8-ftp
+      - php8-APCu
       - nextcloud
     state: present
 
-#- name: create nextcloud mysql database
-#  community.mysql.mysql_db:
-#    name: "{{ nc_db_name }}"
-#    state: present
+- name: create nextcloud mysql database
+  community.mysql.mysql_db:
+    name: "{{ nc_db_name }}"
+    state: present
 
-#- name: create nextcloud database use
-#  community.mysql.mysql_user:
-#    name: "{{ nc_db_user }}"
-#    password: "{{ nc_db_pw }}"
-#    state: present
-#    priv:
-#      '{{ nc_db_name }}.*:ALL,GRANT'
+- name: create nextcloud database user
+  community.mysql.mysql_user:
+    name: "{{ nc_db_user }}"
+    password: "{{ nc_db_pw }}"
+    state: present
+    priv:
+      '{{ nc_db_name }}.*:ALL,GRANT'
+
+- name: create data directory {{ nc_data }}
+  ansible.builtin.file:
+    path: "{{ nc_data }}"
+    state: directory
+    mode: 0750
+
+# run occ installation to get a lot of per instance variables properly set up.
+- name: trigger installation of nextcloud
+  ansible.builtin.command:
+  args:
+    cmd: sudo -u wwwrun php occ maintenance:install --database "mysql" --database-name "{{ nc_db_name }}"  --database-user "{{ nc_db_user }}" --database-pass "{{ nc_db_pw }}" --admin-user "{{ nc_admin }}" --admin-pass "{{ nc_admin_pw }}" --data-dir "{{ nc_data }}"
+    chdir: "/srv/www/{{ nc_location }}"
+  when: nc_config_php| length == 0
+
+- name: update trusted domain
+  ansible.builtin.command:
+  args:
+    cmd: sudo -u wwwrun php occ config:system:set trusted_domains 1 --value="{{ nc_domain }}"
+    chdir: "/srv/www/{{ nc_location }}"
+  when: nc_domain| length > 0
+
+- name: Copy existing config.php
+  ansible.builtin.copy:
+    src: "{{ nc_config_php }}"
+    dest: "/srv/www/{{ nc_location }}/config/config.php"
+    owner: "wwwrun"
+    group: "www"
+  when: nc_config_php| length > 0
 
 # Copy database dump file to remote host and restore it to database 'my_db'
-#- name: Copy database dump file
-#  ansible.builtin.copy:
-#    src: "{{ sqlbackup }}"
-#    dest: /tmp
-#  when: sqlbackup| length > 0
+- name: Copy database dump file
+  ansible.builtin.copy:
+    src: "{{ nc_sqlbackup }}"
+    dest: /tmp
+  when: nc_sqlbackup| length > 0
 
-#- name: optionally play back an SQL backup
-#  community.mysql.mysql_db:
-#    name: "{{ nc_db_name }}"
-#    state: import
-#    target: "/tmp/{{ sqlbackup }}"
-#  when: sqlbackup| length > 0
+- name: optionally play back an SQL backup
+  community.mysql.mysql_db:
+    name: "{{ nc_db_name }}"
+    state: import
+    target: "/tmp/{{ nc_sqlbackup }}"
+  when: nc_sqlbackup| length > 0
+
+- name: add APCu php cache
+  ansible.builtin.lineinfile:
+    path: "/srv/www/{{ nc_location }}/config/config.php"
+    line: "  'memcache.local' => '\\OC\\Memcache\\APCu',"
+    insertbefore: '\);'
+
+- name: Install php8 redis extension when required
+  when: nc_redis_socket | length > 0
+  ansible.builtin.package:
+    name:
+      - php8-redis
+    state: present
+
+- name: connect redis
+  when: nc_redis_socket | length > 0
+  ansible.builtin.blockinfile:
+    path: "/srv/www/{{ nc_location }}/config/config.php"
+    insertbefore: '\);'
+    marker: "/* {mark} ANSIBLE MANAGED BLOCK */"
+    block: |
+      'memcache.distributed' => '\OC\Memcache\Redis',
+      'memcache.locking' => '\OC\Memcache\Redis',
+      'redis' => [
+         'host'     => '{{ nc_redis_socket }}',
+         'port'     => 0,
+      ],
+
+- name: Ensure nextcloud cron job is running
+  ansible.builtin.systemd:
+    name: nextcloud-cron
+    state: restarted
+    enabled: true

@@ -3,9 +3,9 @@
 # Set up NextCloud
 
 Configurable ansible role for installing nextcloud.
-If php-fpm is present we configure nextcloud to use it.
 If a redis socket is given, we use that
 mysql/mariadb is used for the database.
+If you want to use php-fpm with your web-server you have to do it yourself.
 
 - openSUSE Leap 15.4 -> tested
 
@@ -17,15 +17,17 @@ You can set the following variables to configure the role. Here listed are the v
 
 | Value | Description | Default |
 |-------|-------------|---------|
-|`sqlbackup` | file with an sql backup | "" |
-|`nc_location` | install location of nextcloud in /srv/www | "nextcloud" |
+|`nc_location` | install location of nextcloud in /srv/www | "htdocs/nextcloud" |
 |`nc_data` | data location outside of /srv/www | "ncdata" |
 |`nc_db_name` | name of database to utilize | "nextcloud" |
 |`nc_db_user` | mysql username | "" |
 |`nc_db_pw` | password of mysql user | "" |
 |`nc_redis_socket` | redis unix socket to utilize | "" |
-|`nc_php_fpm_pool` | name of the PHP-fpm pool to utilize | "" |
-|`drupal_trusted_host_pattern` | Who gets update notifications | "" |
+|`nc_admin` | In case of a new installation the admin user to create | "Administrator" |
+|`nc_admin_pw` | the password of the admin user | "admin_pw" |
+|`nc_domain` | The domain of the nextcloud | "cloud.example.org" |
+|`nc_sqlbackup` | optional: file with an sql backup | "" |
+|`nc_config_php` | optional: file with an exisiting nextcloud config.php | "" |
 
 ## Example Playbook
 
@@ -42,10 +44,10 @@ An advanced example for the imaginary `jellyfish` test server
          - role: geekoops-nextcloud
            vars:
              nc_db_pw: "1234abcd"
-             nc_php_fpm_pool: "cloud"
+             nc_redis_socket: "/var/run/redis/cloud.sock"
 
 ## Stuff to do afterwards
-- If you replayed a backup, you need to copy over plugins, data
+- If you replayed a backup, you need to copy over plugins, data,...
 
 ## License
 
