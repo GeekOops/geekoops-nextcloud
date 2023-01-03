@@ -81,6 +81,35 @@
     state: directory
     mode: 0750
 
+- name: create separate nextcloud tmp directory {{ nc_tmp }}
+  ansible.builtin.file:
+    path: "{{ nc_tmp }}"
+    state: directory
+    owner: "wwwrun"
+    group: "www"
+    mode: 0750
+
+- name: Ensure AppArmor lets php-fpm write and lock to the nextcloud folder
+  ansible.builtin.lineinfile:
+    path: /etc/apparmor.d/local/php-fpm
+    line: "/srv/www/{{ nc_location }}/** rwlk,"
+
+- name: Ensure AppArmor lets php-fpm write to the ncdata folder
+  ansible.builtin.lineinfile:
+    path: /etc/apparmor.d/local/php-fpm
+    line: "{{ nc_data}}/** rwlk,"
+
+- name: Ensure AppArmor lets php-fpm write to the nc-tmp folder
+  ansible.builtin.lineinfile:
+    path: /etc/apparmor.d/local/php-fpm
+    line: "{{ nc_tmp}}/** rwlk,"
+
+- name: Ensure AppArmor is reloaded
+  systemd:
+    name: apparmor
+    state: restarted
+    enabled: true
+
 # run occ installation to get a lot of per instance variables properly set up.
 - name: trigger installation of nextcloud
   ansible.builtin.command:
@@ -118,6 +147,12 @@
     target: "/tmp/{{ nc_sqlbackup }}"
   when: nc_sqlbackup| length > 0
 
+- name: configure the out-of-tree nextcloud exclusive temp storage. NOTE that php-fpm must have access to it!!
+  ansible.builtin.lineinfile:
+    path: "/srv/www/{{ nc_location }}/config/config.php"
+    line: "  'tempdirectory' => '{{nc_tmp}}',"
+    insertbefore: '\);'
+
 - name: add APCu php cache
   ansible.builtin.lineinfile:
     path: "/srv/www/{{ nc_location }}/config/config.php"
@@ -130,6 +165,13 @@
     name:
       - php8-redis
     state: present
+
+- name: make apache wwwrun user part of redis group
+  when: nc_redis_socket | length > 0
+  ansible.builtin.user:
+    name: 'wwwrun'
+    groups: 'redis'
+    append: yes
 
 - name: connect redis
   when: nc_redis_socket | length > 0

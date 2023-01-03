@@ -1,6 +1,7 @@
 ---
 nc_location: "htdocs/nextcloud"
 nc_data: "/srv/ncdata"
+nc_tmp: "/srv/www/nextcloud-tmp"
 nc_db_name: "nextcloud"
 nc_db_user: "cloud_user"
 nc_db_pw: ""
