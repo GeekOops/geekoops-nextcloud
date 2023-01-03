@@ -118,13 +118,6 @@
     chdir: "/srv/www/{{ nc_location }}"
   when: nc_config_php| length == 0
 
-- name: update trusted domain
-  ansible.builtin.command:
-  args:
-    cmd: sudo -u wwwrun php occ config:system:set trusted_domains 1 --value="{{ nc_domain }}"
-    chdir: "/srv/www/{{ nc_location }}"
-  when: nc_domain| length > 0
-
 - name: Copy existing config.php
   ansible.builtin.copy:
     src: "{{ nc_config_php }}"
@@ -146,6 +139,13 @@
     state: import
     target: "/tmp/{{ nc_sqlbackup }}"
   when: nc_sqlbackup| length > 0
+
+- name: update trusted domain
+  ansible.builtin.command:
+  args:
+    cmd: sudo -u wwwrun php occ config:system:set trusted_domains 1 --value="{{ nc_domain }}"
+    chdir: "/srv/www/{{ nc_location }}"
+  when: nc_domain| length > 0
 
 - name: configure the out-of-tree nextcloud exclusive temp storage. NOTE that php-fpm must have access to it!!
   ansible.builtin.lineinfile:
