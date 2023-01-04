@@ -11,3 +11,6 @@ nc_admin_pw: "admin_pw"
 nc_domain: "cloud.example.org"
 nc_sqlbackup: ""
 nc_config_php: ""
+nc_configure_apache_vhost: false
+nc_configure_apache_vhost_fpm: "/var/run/php-fpm/cloud.sock"
+nc_configure_apache_vhost_letsencrypt: "/etc/letsencrypt/live/cloud.example.org/"

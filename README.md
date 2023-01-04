@@ -28,6 +28,9 @@ You can set the following variables to configure the role. Here listed are the v
 |`nc_domain` | The domain of the nextcloud | "cloud.example.org" |
 |`nc_sqlbackup` | optional: file with an sql backup | "" |
 |`nc_config_php` | optional: file with an exisiting nextcloud config.php | "" |
+|`nc_configure_apache_vhost`|Experimental: create an apache vhost file| false |
+|`nc_configure_apache_vhost_fpm`| Experimental,optional: php-fpm pool to use in vhost| "/var/run/php-fpm/cloud.sock" |
+|`nc_configure_apache_vhost_letsencrypt`| Experimental: letsencrypt certificates to distribute | "/etc/letsencrypt/live/cloud.example.org/" |
 
 ## Example Playbook
 

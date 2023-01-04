@@ -147,6 +147,13 @@
     chdir: "/srv/www/{{ nc_location }}"
   when: nc_domain| length > 0
 
+- name: update overwritehost
+  ansible.builtin.command:
+  args:
+    cmd: sudo -u wwwrun php occ config:system:set overwritehost --value="{{ nc_domain }}"
+    chdir: "/srv/www/{{ nc_location }}"
+  when: nc_domain| length > 0
+
 - name: configure the out-of-tree nextcloud exclusive temp storage. NOTE that php-fpm must have access to it!!
   ansible.builtin.lineinfile:
     path: "/srv/www/{{ nc_location }}/config/config.php"
@@ -187,8 +194,17 @@
          'port'     => 0,
       ],
 
-- name: Ensure nextcloud cron job is running
+- name: Ensure nextcloud cron job is running, Check if its working!!!
   ansible.builtin.systemd:
     name: nextcloud-cron
     state: restarted
     enabled: true
+
+- name: configure the use of the system cron in nextcloud
+  ansible.builtin.command:
+  args:
+    cmd: sudo -u wwwrun php occ background:cron
+    chdir: "/srv/www/{{ nc_location }}"
+
+- include_tasks: create_apache_vhost.yml
+  when: nc_configure_apache_vhost| bool == true
