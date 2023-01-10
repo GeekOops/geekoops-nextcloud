@@ -2,14 +2,16 @@
 <IfDefine !NOSSL>
 
 <VirtualHost {{ ansible_eth0.ipv4.address }}:443>
-    {% if nc_configure_apache_vhost_fpm %}
-    <Proxy "fcgi://cloud/">
+        {% if nc_configure_apache_vhost_fpm %}
+        <Proxy "fcgi://cloud/">
         # we must declare a (any) parameter in here 
         # or it won't register the proxy ahead of time
         ProxySet disablereuse=off
-    </Proxy>
-    {% endif %}
-
+        </Proxy>
+        <FilesMatch ".+\.ph(p[34578]?|t|tml)$">
+                SetHandler "proxy:unix:{{ nc_configure_apache_vhost_fpm }} |fcgi://cloud/"
+        </FilesMatch>
+        {% endif %}
 
         #  General setup for the virtual host
         DocumentRoot "/srv/www/{{ nc_location }}"
@@ -195,11 +197,6 @@
                 AllowOverride All
                 Require all granted
         </Directory>
-        {% if nc_configure_apache_vhost_fpm %}
-                <FilesMatch ".+\.ph(p[34578]?|t|tml)$">
-                        SetHandler "proxy:unix:{{ nc_configure_apache_vhost_fpm }} |fcgi://cloud/"
-                </FilesMatch>
-        {% endif %}
         <IfModule mod_headers.c>
                 Header always set Strict-Transport-Security "max-age=15768000; includeSubDomains; preload"
                 Header set Referrer-Policy "strict-origin-when-cross-origin"

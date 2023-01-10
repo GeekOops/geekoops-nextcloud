@@ -51,6 +51,7 @@ An advanced example for the imaginary `jellyfish` test server
 
 ## Stuff to do afterwards
 - If you replayed a backup, you need to copy over plugins, data,...
+- If you use SSL you can configure CAA for your domain.
 
 ## issues
 - login screen: After pressing login, you are immediatel back at the login screen: ensure tmp folder is accessible: proper right, nc config.php, AND php-fpm ENV variables. (see geekoops-php-fpm)
