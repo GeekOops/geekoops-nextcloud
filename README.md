@@ -6,6 +6,8 @@ Configurable ansible role for installing nextcloud.
 If a redis socket is given, we use that
 mysql/mariadb is used for the database.
 If you want to use php-fpm with your web-server you have to do it yourself.
+Some documentation on how to use the other geekoops scripts in conjunction with
+this role can be found here: [https://www.florian-goth.de/node/23](https://www.florian-goth.de/node/23)
 
 - openSUSE Leap 15.4 -> tested
 
